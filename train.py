@@ -23,7 +23,7 @@ def train_agent():
     pbar = tqdm(total=total_frames)
     eval_str = ""
 
-    env = build_env()
+    env = build_env(frame_skip=4, stacked_frames=4)
 
     (
         policy_module,

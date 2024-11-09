@@ -20,19 +20,34 @@ from utils import device
 class PPO_Actor(nn.Module):
     def __init__(self, env) -> None:
         super().__init__()
-        self._net = nn.Sequential(
-            nn.LazyLinear(num_cells, device=device),
-            nn.Tanh(),
-            nn.LazyLinear(num_cells, device=device),
-            nn.Tanh(),
-            nn.LazyLinear(num_cells, device=device),
-            nn.Tanh(),
-            nn.LazyLinear(2 * env.action_spec.shape[-1], device=device),
-            NormalParamExtractor(),
-        )
+        self.cnn_base = nn.Sequential(  # input shape (4, 96, 96)
+            nn.Conv2d(1, 8, kernel_size=4, stride=2),
+            nn.ReLU(),  # activation
+            nn.Conv2d(8, 16, kernel_size=3, stride=2),  # (8, 47, 47)
+            nn.ReLU(),  # activation
+            nn.Conv2d(16, 32, kernel_size=3, stride=2),  # (16, 23, 23)
+            nn.ReLU(),  # activation
+            nn.Conv2d(32, 64, kernel_size=3, stride=2),  # (32, 11, 11)
+            nn.ReLU(),  # activation
+            nn.Conv2d(64, 128, kernel_size=3, stride=1),  # (64, 5, 5)
+            nn.ReLU(),  # activation
+            nn.Conv2d(128, 256, kernel_size=3, stride=1),  # (128, 3, 3)
+            nn.ReLU(),  # activation
+        )  # output shape (256, 1, 1)
+        self.v = nn.Sequential(nn.Linear(256, 100), nn.ReLU(), nn.Linear(100, 1))
+        self.fc = nn.Sequential(nn.Linear(256, 100), nn.ReLU())
+        self.alpha_head = nn.Sequential(nn.Linear(100, 3), nn.Softplus())
+        self.beta_head = nn.Sequential(nn.Linear(100, 3), nn.Softplus())
 
     def forward(self, x):
-        return self._net(x)
+        x = self.cnn_base(x)
+        x = x.view(-1, 256)
+        v = self.v(x)
+        x = self.fc(x)
+        alpha = self.alpha_head(x) + 1
+        beta = self.beta_head(x) + 1
+
+        return (alpha, beta), v
 
 
 class PPO_Value(nn.Module):
@@ -53,9 +68,9 @@ class PPO_Value(nn.Module):
 
 
 def build_actor_net(env):
-    actor_net = PPO_Actor(env)
+    actor_net = PPO_Actor(env).to(device)
     policy_module = TensorDictModule(
-        actor_net, in_keys=["observation"], out_keys=["loc", "scale"]
+        actor_net, in_keys=["pixels"], out_keys=["loc", "scale"]
     )
 
     policy_module = ProbabilisticActor(
@@ -78,7 +93,7 @@ def build_value_net(env):
     value_net = PPO_Value()
     value_module = ValueOperator(
         module=value_net,
-        in_keys=["observation"],
+        in_keys=["pixels"],
     )
     value_module(env.reset())
     return value_module
