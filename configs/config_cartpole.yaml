@@ -1,0 +1,52 @@
+device:  
+
+agent:
+  init_bias: 2.0 
+
+# Environment
+env:
+  env_name: CartPole-v1
+  eps_greedy_val: 0.1
+  eps_greedy_val_env: 0.005
+  frame_skip: 1
+
+# collector
+collector:
+  num_collectors: 2
+  num_workers: 2
+  total_frames: 5_000
+  frames_per_batch: 32 
+  eps_start: 1.0
+  eps_end: 0.05
+  annealing_frames: 250_000
+  init_random_frames: 100 
+
+# buffer
+buffer:
+  buffer_size: 10_000
+  batch_size: 32 
+
+# logger
+logger:
+  log_interval: 500
+  backend: wandb
+  project_name: torchrl_example_dqn
+  group_name: null
+  exp_name: DQN
+  test_interval: 50_000
+  num_test_episodes: 5
+  video: False
+
+# Optim
+optim:
+  lr: 2e-3
+  wd: 1e-5
+  betas: [0.9, 0.999]
+  n_optim: 8
+  max_grad_norm: 10
+
+  # loss
+loss:
+  gamma: 0.99
+  hard_update_freq: 50
+  num_updates: 1
