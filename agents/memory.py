@@ -2,7 +2,7 @@ from torchrl.data import LazyMemmapStorage, MultiStep, TensorDictReplayBuffer
 from torchrl.collectors import MultiaSyncDataCollector, SyncDataCollector
 from torchrl.envs import ExplorationType
 
-from utils import is_fork
+from utils import is_fork, DEVICE
 from envs.cartpole import make_env
 
 
@@ -19,7 +19,6 @@ def get_collector(
     cfg,
     stats,
     actor_explore,
-    device,
 ):
     # We can't use nested child processes with mp_start_method="fork"
     if is_fork:
@@ -34,6 +33,7 @@ def get_collector(
                 parallel=True, obs_norm_sd=stats, num_workers=cfg.collector.num_workers
             )
         ] * cfg.collector.num_collectors
+
     data_collector = cls(
         env_arg,
         policy=actor_explore,
@@ -43,8 +43,8 @@ def get_collector(
         exploration_type=ExplorationType.RANDOM,
         # We set the all the devices to be identical. Below is an example of
         # heterogeneous devices
-        device=device,
-        storing_device=device,
+        device=DEVICE,
+        storing_device=DEVICE,
         split_trajs=False,
         postproc=MultiStep(gamma=cfg.loss.gamma, n_steps=5),
     )

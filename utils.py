@@ -4,14 +4,12 @@ import torch
 is_fork = multiprocessing.get_start_method() == "fork"
 
 
-def get_device(cfg):
-    if cfg.device in ("", None):
-        if torch.cuda.is_available():
-            device = "cuda:0"
-        else:
-            device = "cpu"
+def get_device():
+    if torch.cuda.is_available():
+        device = "cuda:0"
+    else:
+        device = "cpu"
     device = torch.device(device)
-    print(device)
     return device
 
 
@@ -26,3 +24,6 @@ def is_notebook() -> bool:
             return False  # Other type (?)
     except NameError:
         return False  # Probably standard Python interpreter
+
+
+DEVICE = get_device()

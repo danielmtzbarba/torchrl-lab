@@ -20,7 +20,8 @@ from agents.dqn import make_dqn_model
 from envs.cartpole import make_env, get_norm_stats
 from agents.loss import get_loss_module
 from agents.memory import get_replay_buffer, get_collector
-import utils
+
+from utils import DEVICE
 
 warnings.filterwarnings("ignore")
 
@@ -29,21 +30,26 @@ warnings.filterwarnings("ignore")
     config_path="configs/", config_name="config_cartpole.yaml", version_base="1.1"
 )
 def main(cfg: "DictConfig"):
-    device = utils.get_device(cfg)
-
     stats = get_norm_stats()
-    dummyenv = make_env(parallel=False, obs_norm_sd=stats, device=device)
+    test_env = make_env(
+        parallel=False,
+        obs_norm_sd=stats,
+        check_env=True,
+    )
 
     # Get model
-    actor, actor_explore = make_dqn_model(cfg, dummyenv, device)
+    actor, actor_explore = make_dqn_model(cfg, test_env)
     loss_module, target_net_updater = get_loss_module(actor, cfg.loss.gamma)
 
     collector = get_collector(
         cfg=cfg,
         stats=stats,
         actor_explore=actor_explore,
-        device=device,
     )
+    for data in collector:
+        print(data)
+        break
+
     optimizer = torch.optim.Adam(
         loss_module.parameters(),
         lr=cfg.optim.lr,
@@ -78,7 +84,7 @@ def main(cfg: "DictConfig"):
         record_frames=1000,  # maximum number of frames in the record
         frame_skip=cfg.env.frame_skip,
         policy_exploration=actor_explore,
-        environment=dummyenv,
+        environment=test_env,
         exploration_type=ExplorationType.DETERMINISTIC,
         log_keys=[("next", "reward")],
         out_keys={("next", "reward"): "rewards"},

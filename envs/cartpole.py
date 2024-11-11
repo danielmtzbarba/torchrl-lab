@@ -18,9 +18,15 @@ from torchrl.envs import (
     StepCounter,
 )
 
+from utils import DEVICE
+
 
 def make_env(
-    parallel=False, obs_norm_sd=None, num_workers=1, mp_context=None, device=None
+    parallel=False,
+    obs_norm_sd=None,
+    num_workers=1,
+    mp_context=None,
+    check_env=False,
 ):
     if obs_norm_sd is None:
         obs_norm_sd = {"standard_normal": True}
@@ -31,7 +37,7 @@ def make_env(
                 "CartPole-v1",
                 from_pixels=True,
                 pixels_only=True,
-                device=device,
+                device=DEVICE,
             )
 
         base_env = ParallelEnv(
@@ -43,10 +49,7 @@ def make_env(
         )
     else:
         base_env = GymEnv(
-            "CartPole-v1",
-            from_pixels=True,
-            pixels_only=True,
-            device=device,
+            "CartPole-v1", from_pixels=True, pixels_only=True, device=DEVICE
         )
 
     env = TransformedEnv(
@@ -61,10 +64,10 @@ def make_env(
             ObservationNorm(in_keys=["pixels"], **obs_norm_sd),
         ),
     )
+    if check_env:
+        check_env_specs(env)
 
-    # check_env_specs(env)
-
-    return env
+    return env.to(DEVICE)
 
 
 def get_norm_stats():
@@ -75,7 +78,7 @@ def get_norm_stats():
     obs_norm_sd = dummyenv.transform[-1].state_dict()
     # let's check that normalizing constants have a size of ``[C, 1, 1]`` where
     # ``C=4`` (because of :class:`~torchrl.envs.CatFrames`).
-    print("state dict of the observation norm:", obs_norm_sd)
+    # print("state dict of the observation norm:", obs_norm_sd)
     dummyenv.close()
     del dummyenv
     return obs_norm_sd
