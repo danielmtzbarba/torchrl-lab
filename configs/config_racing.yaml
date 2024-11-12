@@ -2,7 +2,7 @@ device: null
 
 # Environment
 env:
-  env_name: CartPole-v1
+  env_name: CarRacing-v2
 
 # collector
 collector:
@@ -21,12 +21,12 @@ buffer:
 # logger
 logger:
   backend: wandb
-  project_name: torchrl_example_dqn
+  project_name: torchrl_racing_dqn
   group_name: null
-  exp_name: DQN
+  exp_name: DQN-CarRacing
   test_interval: 50_000
   num_test_episodes: 5
-  video: False
+  video: True 
 
 # Optim
 optim:
