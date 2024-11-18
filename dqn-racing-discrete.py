@@ -28,7 +28,7 @@ warnings.filterwarnings("ignore")
 class Args:
     exp_name: str = os.path.basename(__file__)[: -len(".py")]
     """the name of this experiment"""
-    seed: int = 42
+    seed: int = 1000
     """seed of the experiment"""
     torch_deterministic: bool = True
     """if toggled, `torch.backends.cudnn.deterministic=False`"""
@@ -58,7 +58,7 @@ class Args:
     """the learning rate of the optimizer"""
     num_envs: int = 1
     """the number of parallel game environments"""
-    buffer_size: int = 50000
+    buffer_size: int = 20000
     """the replay memory buffer size"""
     gamma: float = 0.99
     """the discount factor gamma"""
