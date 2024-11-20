@@ -6,13 +6,19 @@ import torch
 
 from torch.utils.tensorboard import SummaryWriter
 from .dqn_racing import Args
+from .dqn_gridworld import ArgsGridWorld
 
 
 def get_experiment(exp_name: str):
     if "dqn_racing_discrete" in exp_name:
         args = tyro.cli(Args)
         assert args.num_envs == 1, "vectorized envs are not supported at the moment"
-        run_name = f"{args.exp_name}-seed_{args.seed}-bs_{Args.buffer_size}"
+        run_name = f"{args.exp_name}-seed_{args.seed}-bs_{args.buffer_size}"
+    elif "dqn_gridworld" in exp_name:
+        args = tyro.cli(ArgsGridWorld)
+        assert args.num_envs == 1, "vectorized envs are not supported at the moment"
+        run_name = f"{args.exp_name}-seed_{args.seed}-bs_{args.buffer_size}"
+
     else:
         exit()
 

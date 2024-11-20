@@ -1,6 +1,7 @@
 import gymnasium as gym
 
 from .racing import make_racing_env
+from .gridworld import make_gridworld_env
 
 
 def make_env(args, run_name):
@@ -15,6 +16,19 @@ def make_env(args, run_name):
                     args.capture_video,
                     run_name,
                     continuous=False,
+                )
+                for i in range(args.num_envs)
+            ]
+        )
+    elif args.env_id == "GridWorld-v0":
+        envs = gym.vector.SyncVectorEnv(
+            [
+                make_gridworld_env(
+                    args.env_id,
+                    args.seed + i,
+                    i,
+                    args.capture_video,
+                    run_name,
                 )
                 for i in range(args.num_envs)
             ]

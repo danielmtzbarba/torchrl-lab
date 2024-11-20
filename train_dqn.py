@@ -58,7 +58,8 @@ def save_dqn_model(args, run_name):
 
 
 if __name__ == "__main__":
-    args, run_name, writer = get_experiment("dqn_racing_discrete")
+    args, run_name, writer = get_experiment("dqn_gridworld")
+    print(run_name)
 
     envs = make_env(args, run_name)
 
