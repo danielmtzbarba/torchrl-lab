@@ -8,6 +8,7 @@ import torch.nn.functional as F
 import warnings
 
 from envs.racing import make_racing_env
+from envs.gridworld import make_gridworld_env
 from exp import get_experiment
 from agents import build_agent, QNetwork
 from envs import make_env
@@ -31,7 +32,7 @@ def save_dqn_model(args, run_name):
     episodic_returns = evaluate(
         args,
         model_path,
-        make_racing_env,
+        make_gridworld_env,
         args.env_id,
         eval_episodes=10,
         run_name=f"{run_name}-eval",

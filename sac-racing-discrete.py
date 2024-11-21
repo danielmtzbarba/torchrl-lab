@@ -42,15 +42,15 @@ class Args:
     """the wandb's project name"""
     wandb_entity: str = None
     """the entity (team) of wandb's project"""
-    capture_video: bool = False
+    capture_video: bool = True
     """whether to capture videos of the agent performances (check out `videos` folder)"""
 
     # Algorithm specific arguments
     env_id: str = "CarRacing-v2"
     """the id of the environment"""
-    total_timesteps: int = 5000000
+    total_timesteps: int = 500000
     """total timesteps of the experiments"""
-    buffer_size: int = int(1e5)
+    buffer_size: int = 20000
     """the replay memory buffer size"""  # smaller than in original paper but evaluation is done only for 100k steps anyway
     gamma: float = 0.99
     """the discount factor gamma"""
@@ -58,7 +58,7 @@ class Args:
     """target smoothing coefficient (default: 1)"""
     batch_size: int = 64
     """the batch size of sample from the reply memory"""
-    learning_starts: int = 2e4
+    learning_starts: int = 20000
     """timestep to start learning"""
     policy_lr: float = 3e-4
     """the learning rate of the policy network optimizer"""
@@ -175,7 +175,7 @@ poetry run pip install "stable_baselines3==2.0.0a1" "gymnasium[atari,accept-rom-
 """
         )
     args = tyro.cli(Args)
-    run_name = f"{args.env_id}__{args.exp_name}__{args.seed}__{int(time.time())}"
+    run_name = f"{args.env_id}-{args.seed}-{args.buffer_size}-SAC"
     if args.track:
         import wandb
 
