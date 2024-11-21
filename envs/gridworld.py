@@ -14,7 +14,7 @@ def make_gridworld_env(env_id, seed, idx, capture_video, run_name):
             env = GridWorldEnv(render_mode="rgb_array", size=5)
             env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
         else:
-            env = GridWorldEnv(env_id, render_mode="rgb_array", size=5)
+            env = GridWorldEnv(render_mode="rgb_array", size=5)
 
         env = GrayScaleObservation(env)
         env = ResizeObservation(env, (96, 96))
