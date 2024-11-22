@@ -5,16 +5,16 @@ from gymnasium.wrappers import (
     ResizeObservation,
 )
 
-from gridworld.envs import GridWorldEnv
+from gridworld.envs import Go2TargetEnv
 
 
 def make_gridworld_env(env_id, seed, idx, capture_video, run_name):
     def thunk():
         if capture_video and idx == 0:
-            env = GridWorldEnv(render_mode="rgb_array", size=5)
+            env = Go2TargetEnv(render_mode="rgb_array", size=8)
             env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
         else:
-            env = GridWorldEnv(render_mode="rgb_array", size=5)
+            env = Go2TargetEnv(render_mode="rgb_array", size=8)
 
         env = GrayScaleObservation(env)
         env = ResizeObservation(env, (96, 96))

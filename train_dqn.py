@@ -23,7 +23,7 @@ def linear_schedule(start_e: float, end_e: float, duration: int, t: int):
     return max(slope * t + start_e, end_e)
 
 
-def save_dqn_model(args, run_name):
+def save_dqn_model(args, q_network, run_name):
     model_path = f"runs/{run_name}/{args.exp_name}.cleanrl_model"
     torch.save(q_network.state_dict(), model_path)
     print(f"model saved to {model_path}")
@@ -61,6 +61,7 @@ def save_dqn_model(args, run_name):
 if __name__ == "__main__":
     args, run_name, writer = get_experiment("dqn_gridworld")
     print(run_name)
+    max_return = 0
 
     envs = make_env(args, run_name)
 
@@ -151,9 +152,10 @@ if __name__ == "__main__":
                         args.tau * q_network_param.data
                         + (1.0 - args.tau) * target_network_param.data
                     )
-
-    if args.save_model:
-        save_dqn_model(args, run_name)
+                if rewards[0] > max_return:
+                    if args.save_model:
+                        save_dqn_model(args, q_network, run_name)
+                    max_return = rewards[0]
 
     envs.close()
     writer.close()
