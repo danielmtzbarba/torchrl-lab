@@ -28,7 +28,7 @@ warnings.filterwarnings("ignore")
 
 @dataclass
 class Args:
-    exp_name: str = os.path.basename(__file__)[: -len(".py")]
+    exp_name: str = "SAC-CarRacing"
     """the name of this experiment"""
     seed: int = 1
     """seed of the experiment"""
@@ -50,7 +50,7 @@ class Args:
     """the id of the environment"""
     total_timesteps: int = 500000
     """total timesteps of the experiments"""
-    buffer_size: int = 20000
+    buffer_size: int = 100000
     """the replay memory buffer size"""  # smaller than in original paper but evaluation is done only for 100k steps anyway
     gamma: float = 0.99
     """the discount factor gamma"""
@@ -58,7 +58,7 @@ class Args:
     """target smoothing coefficient (default: 1)"""
     batch_size: int = 64
     """the batch size of sample from the reply memory"""
-    learning_starts: int = 20000
+    learning_starts: int = 10000
     """timestep to start learning"""
     policy_lr: float = 3e-4
     """the learning rate of the policy network optimizer"""
@@ -66,7 +66,7 @@ class Args:
     """the learning rate of the Q network network optimizer"""
     update_frequency: int = 4
     """the frequency of training updates"""
-    target_network_frequency: int = 8000
+    target_network_frequency: int = 5000
     """the frequency of updates for the target networks"""
     alpha: float = 0.2
     """Entropy regularization coefficient."""
@@ -80,7 +80,9 @@ def make_env(env_id, seed, idx, capture_video, run_name, continuous=False):
     def thunk():
         if capture_video and idx == 0:
             env = gym.make(env_id, render_mode="rgb_array", continuous=continuous)
-            env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
+            env = gym.wrappers.RecordVideo(
+                env, f"videos/{run_name}", episode_trigger=lambda x: x % 1e5 == 0
+            )
         else:
             env = gym.make(env_id, continuous=continuous)
         env = GrayScaleObservation(env)
@@ -175,7 +177,7 @@ poetry run pip install "stable_baselines3==2.0.0a1" "gymnasium[atari,accept-rom-
 """
         )
     args = tyro.cli(Args)
-    run_name = f"{args.env_id}-{args.seed}-{args.buffer_size}-SAC"
+    run_name = f"{args.exp_name}-{args.seed}-{args.buffer_size}"
     if args.track:
         import wandb
 

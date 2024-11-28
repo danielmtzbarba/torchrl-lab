@@ -25,9 +25,9 @@ warnings.filterwarnings("ignore")
 
 @dataclass
 class Args:
-    exp_name: str = os.path.basename(__file__)[: -len(".py")]
+    exp_name: str = "PPO-CarRacing"
     """the name of this experiment"""
-    seed: int = 100
+    seed: int = 1000
     """seed of the experiment"""
     torch_deterministic: bool = True
     """if toggled, `torch.backends.cudnn.deterministic=False`"""
@@ -91,7 +91,9 @@ def make_env(env_id, idx, capture_video, run_name, continuous=False):
     def thunk():
         if capture_video and idx == 0:
             env = gym.make(env_id, render_mode="rgb_array", continuous=continuous)
-            env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
+            env = gym.wrappers.RecordVideo(
+                env, f"videos/{run_name}", episode_trigger=lambda x: x % 1e5 == 0
+            )
         else:
             env = gym.make(env_id, continuous=continuous)
         env = GrayScaleObservation(env)

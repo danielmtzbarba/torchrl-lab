@@ -26,9 +26,9 @@ warnings.filterwarnings("ignore")
 
 @dataclass
 class Args:
-    exp_name: str = os.path.basename(__file__)[: -len(".py")]
+    exp_name: str = "DQN-CarRacing"
     """the name of this experiment"""
-    seed: int = 1000
+    seed: int = 1
     """seed of the experiment"""
     torch_deterministic: bool = True
     """if toggled, `torch.backends.cudnn.deterministic=False`"""
@@ -84,7 +84,9 @@ def make_env(env_id, seed, idx, capture_video, run_name, continuous=False):
     def thunk():
         if capture_video and idx == 0:
             env = gym.make(env_id, render_mode="rgb_array", continuous=continuous)
-            env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
+            env = gym.wrappers.RecordVideo(
+                env, f"videos/{run_name}", episode_trigger=lambda x: x % 1e5 == 0
+            )
         else:
             env = gym.make(env_id, continuous=continuous)
         env = GrayScaleObservation(env)
@@ -287,10 +289,11 @@ poetry run pip install "stable_baselines3==2.0.0a1"
         from evals.dqn_eval import evaluate
 
         episodic_returns = evaluate(
+            args,
             model_path,
             make_env,
             args.env_id,
-            eval_episodes=10,
+            eval_episodes=30,
             run_name=f"{run_name}-eval",
             Model=QNetwork,
             device=device,
