@@ -7,10 +7,9 @@ import torch.nn.functional as F
 
 import warnings
 
-from envs.racing import make_racing_env
-from envs.gridworld import make_gridworld_env
+from evals.dqn_eval import save_dqn_model
+from agents import build_agent
 from exp import get_experiment
-from agents import build_agent, QNetwork
 from envs import make_env
 
 warnings.filterwarnings("ignore")
@@ -23,43 +22,8 @@ def linear_schedule(start_e: float, end_e: float, duration: int, t: int):
     return max(slope * t + start_e, end_e)
 
 
-def save_dqn_model(args, q_network, run_name):
-    model_path = f"runs/{run_name}/{args.exp_name}.cleanrl_model"
-    torch.save(q_network.state_dict(), model_path)
-    print(f"model saved to {model_path}")
-    from evals.dqn_eval import evaluate
-
-    episodic_returns = evaluate(
-        args,
-        model_path,
-        make_gridworld_env,
-        args.env_id,
-        eval_episodes=10,
-        run_name=f"{run_name}-eval",
-        Model=QNetwork,
-        device=device,
-        epsilon=0.05,
-    )
-    for idx, episodic_return in enumerate(episodic_returns):
-        writer.add_scalar("eval/episodic_return", episodic_return, idx)
-
-        if args.upload_model:
-            from cleanrl_utils.huggingface import push_to_hub
-
-            repo_name = f"{args.env_id}-{args.exp_name}-seed{args.seed}"
-            repo_id = f"{args.hf_entity}/{repo_name}" if args.hf_entity else repo_name
-            push_to_hub(
-                args,
-                episodic_returns,
-                repo_id,
-                "DQN",
-                f"runs/{run_name}",
-                f"videos/{run_name}-eval",
-            )
-
-
 if __name__ == "__main__":
-    args, run_name, writer = get_experiment("dqn_gridworld")
+    args, run_name, writer = get_experiment("dqn_carlabev")
     print(run_name)
     max_return = 0
 
@@ -154,7 +118,7 @@ if __name__ == "__main__":
                     )
                 if rewards[0] > max_return:
                     if args.save_model:
-                        save_dqn_model(args, q_network, run_name)
+                        save_dqn_model(args, q_network, run_name, writer)
                     max_return = rewards[0]
 
     envs.close()
