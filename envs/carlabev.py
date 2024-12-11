@@ -1,18 +1,18 @@
-import gymnasium as gym
-from gymnasium.wrappers import (
-    GrayScaleObservation,
-    ResizeObservation,
-    FrameStack,
-)
 from CarlaBEV.envs import CarlaBEV
-
-"""
-HOME
+import gymnasium as gym
 from gymnasium.wrappers import (
     GrayscaleObservation,
     ResizeObservation,
     FrameStackObservation
 )
+"""
+from gymnasium.wrappers import (
+    GrayScaleObservation,
+    ResizeObservation,
+    FrameStack,
+)
+
+HOME
 """
 
 
@@ -24,10 +24,10 @@ def make_carlabev_env(env_id, seed, idx, capture_video, run_name, size: int = 64
         else:
             env = CarlaBEV(render_mode="rgb_array", size=size)
 
-        env = GrayScaleObservation(env)
+        env = GrayscaleObservation(env)
         env = ResizeObservation(env, (96, 96))
-        # env = FrameStackObservation(env, stack_size=4)
-        env = FrameStack(env, num_stack=4)
+        env = FrameStackObservation(env, stack_size=4)
+#        env = FrameStack(env, num_stack=4)
         env = gym.wrappers.RecordEpisodeStatistics(env)
         env.action_space.seed(seed)
 
