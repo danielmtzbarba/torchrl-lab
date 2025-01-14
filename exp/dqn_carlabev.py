@@ -7,6 +7,8 @@ class ArgsCarlaBEV:
     """the name of this experiment"""
     seed: int = 1
     """seed of the experiment"""
+    size: int = 1024
+    """size of rendered image"""
     torch_deterministic: bool = True
     """if toggled, `torch.backends.cudnn.deterministic=False`"""
     cuda: bool = True

@@ -1,10 +1,11 @@
 from CarlaBEV.envs import CarlaBEV
 import gymnasium as gym
 import torch
-from envs.carlabev import make_carlabev_env 
+from envs.carlabev import make_carlabev_env
 from agents import QNetwork
 
 device = "cuda:0"
+size = 1024
 model_path = "runs/dqn-gridworld-seed_1-bs_20000/dqn-gridworld.cleanrl_model"
 LOAD_MODEL = False
 
@@ -16,6 +17,7 @@ dummyenv = gym.vector.SyncVectorEnv(
             idx=1,
             capture_video=False,
             run_name="CarlaBEV",
+            size=size,
         )
         for i in range(1)
     ]
@@ -23,13 +25,15 @@ dummyenv = gym.vector.SyncVectorEnv(
 
 # Initialise the environment
 # env = gym.make("CarRacing-v2", render_mode="human", continuous=False)
-env = CarlaBEV(render_mode="human")
+env = CarlaBEV(size=size, render_mode="human")
 
 model = QNetwork(dummyenv)
 del dummyenv
 
 if LOAD_MODEL:
-    model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
+    model.load_state_dict(
+        torch.load(model_path, map_location=device, weights_only=True)
+    )
 
 model.eval()
 

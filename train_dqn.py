@@ -1,13 +1,15 @@
+import sys
 import random
 import time
 
+import logging
 import numpy as np
 import torch
 import torch.nn.functional as F
 
 import warnings
 
-from evals.dqn_eval import save_dqn_model
+from evals.dqn_eval import eval_dqn_model
 from agents import build_agent
 from exp import get_experiment
 from envs import make_env
@@ -15,6 +17,19 @@ from envs import make_env
 warnings.filterwarnings("ignore")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+file_handler = logging.FileHandler(filename="drlog.log")  # , mode="w")
+stdout_handler = logging.StreamHandler(stream=sys.stdout)
+handlers = [file_handler, stdout_handler]
+
+logging.basicConfig(
+    handlers=handlers,
+    format="[%(asctime)s] %(levelname)s ==> %(message)s",
+    datefmt="%m/%d/%Y %I:%M:%S %p",
+    encoding="utf-8",
+    level=logging.INFO,
+)
+logger = logging.getLogger("drlab")
 
 
 def linear_schedule(start_e: float, end_e: float, duration: int, t: int):
@@ -30,6 +45,10 @@ if __name__ == "__main__":
     envs = make_env(args, run_name)
 
     q_network, optimizer, target_network, rb = build_agent(args, envs, device)
+
+    # save blank model
+    model_path = f"runs/{run_name}/{args.exp_name}.cleanrl_model"
+    torch.save(q_network.state_dict(), model_path)
 
     start_time = time.time()
 
@@ -54,19 +73,34 @@ if __name__ == "__main__":
         # TRY NOT TO MODIFY: execute the game and log data.
         next_obs, rewards, terminations, truncations, infos = envs.step(actions)
 
-        # TRY NOT TO MODIFY: record rewards for plotting purposes
-        if "final_info" in infos:
-            for info in infos["final_info"]:
-                if info and "episode" in info:
-                    print(
-                        f"global_step={global_step}, episodic_return={info['episode']['r']}"
-                    )
-                    writer.add_scalar(
-                        "charts/episodic_return", info["episode"]["r"], global_step
-                    )
-                    writer.add_scalar(
-                        "charts/episodic_length", info["episode"]["l"], global_step
-                    )
+        try:
+            writer.add_scalar("stats/step_reward", infos["step"]["reward"], global_step)
+            #
+            writer.add_scalar(
+                "stats/episodic_return", infos["episode"]["r"], global_step
+            )
+            writer.add_scalar(
+                "stats/episodic_length", infos["episode"]["l"], global_step
+            )
+            #
+            num_ep = infos["stats_ep"]["episode"]
+            stats = infos["stats_ep"]["stats"]
+            success_rate = infos["stats_ep"]["success_rate"]
+            collision_rate = infos["stats_ep"]["collision_rate"]
+
+            #
+            logger.info(f"episode-{num_ep}: {infos["stats_ep"]["mean_reward"]}")
+
+            writer.add_scalar(
+                "stats/mean_reward",
+                infos["stats_ep"]["mean_reward"],
+                num_ep,
+            )
+
+            writer.add_scalar("stats/collision_rate", collision_rate, num_ep)
+            writer.add_scalar("stats/success_rate", success_rate, num_ep)
+        except Exception as e:
+            pass
 
         # TRY NOT TO MODIFY: save data to reply buffer; handle `final_observation`
         real_next_obs = next_obs.copy()
@@ -97,7 +131,7 @@ if __name__ == "__main__":
                     )
                     # print("SPS:", int(global_step / (time.time() - start_time)))
                     writer.add_scalar(
-                        "charts/SPS",
+                        "stats/SPS",
                         int(global_step / (time.time() - start_time)),
                         global_step,
                     )
@@ -116,10 +150,16 @@ if __name__ == "__main__":
                         args.tau * q_network_param.data
                         + (1.0 - args.tau) * target_network_param.data
                     )
+
                 if rewards[0] > max_return:
                     if args.save_model:
-                        save_dqn_model(args, q_network, run_name, writer)
-                    max_return = rewards[0]
+                        model_path = f"runs/{run_name}/{args.exp_name}.cleanrl_model"
+                        torch.save(q_network.state_dict(), model_path)
+                        print(f"model saved to {model_path}")
+                        max_return = rewards[0]
+
+            # if global_step % args.eval_frequency == 0:
+            #    eval_reward = eval_dqn_model(args, q_network, run_name, writer)
 
     envs.close()
     writer.close()
