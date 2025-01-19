@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class ArgsCarlaBEVTest:
-    exp_name: str = "dqn-carlabev-run0"
+    exp_name: str = "carlabev-mpdqn-run1"
     """the name of this experiment"""
     seed: int = 1
     """seed of the experiment"""
@@ -53,7 +53,7 @@ class ArgsCarlaBEVTest:
     """the ending epsilon for exploration"""
     exploration_fraction: float = 0.5
     """the fraction of `total-timesteps` it takes from start-e to go end-e"""
-    learning_starts: int = 100000
+    learning_starts: int = 50000
     """timestep to start learning"""
     train_frequency: int = 10
     """the frequency of training"""
