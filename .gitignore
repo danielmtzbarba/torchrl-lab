@@ -6,6 +6,7 @@ outputs/
 # C extensions
 *.so
 videos/
+runs/
 *.cleanrl_model
 
 # Distribution / packaging

@@ -8,10 +8,9 @@ import torch
 from agents.dqn import QNetwork
 from envs import make_carlabev_env
 
-def save_dqn_model(args, q_network, run_name, writer):
+
+def eval_dqn_model(args, q_network, run_name, writer):
     model_path = f"runs/{run_name}/{args.exp_name}.cleanrl_model"
-    torch.save(q_network.state_dict(), model_path)
-    print(f"model saved to {model_path}")
     from evals.dqn_eval import evaluate
 
     episodic_returns = evaluate(
@@ -25,6 +24,7 @@ def save_dqn_model(args, q_network, run_name, writer):
         device="cuda:0",
         epsilon=0.05,
     )
+
     for idx, episodic_return in enumerate(episodic_returns):
         writer.add_scalar("eval/episodic_return", episodic_return, idx)
 
@@ -42,6 +42,7 @@ def save_dqn_model(args, q_network, run_name, writer):
                 f"videos/{run_name}-eval",
             )
 
+
 def evaluate(
     args,
     model_path: str,
@@ -54,7 +55,9 @@ def evaluate(
     epsilon: float = 0.05,
     capture_video: bool = True,
 ):
-    envs = gym.vector.SyncVectorEnv([make_env(env_id, 0, 0, capture_video, run_name)])
+    envs = gym.vector.SyncVectorEnv(
+        [make_env(env_id, 0, 0, capture_video, run_name, size=args.size)]
+    )
     model = Model(envs).to(device)
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()

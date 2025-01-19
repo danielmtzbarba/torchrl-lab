@@ -15,6 +15,7 @@ def make_env(args, run_name):
                     i,
                     args.capture_video,
                     run_name,
+                    size=args.size,
                 )
                 for i in range(args.num_envs)
             ]
