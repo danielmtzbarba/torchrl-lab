@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class ArgsCarlaBEVTest:
-    exp_name: str = "mpdqn-carlabev-run1"
+    exp_name: str = "dqn-carlabev-run0"
     """the name of this experiment"""
     seed: int = 1
     """seed of the experiment"""
