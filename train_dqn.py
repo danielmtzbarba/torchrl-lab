@@ -70,48 +70,52 @@ if __name__ == "__main__":
         else:
             q_values = q_network(
                 torch.from_numpy(obs).to(device),
-                torch.from_numpy(poses).to(device),
+#                torch.from_numpy(poses).to(device),
             )
             actions = torch.argmax(q_values, dim=1).cpu().numpy()
 
         # TRY NOT TO MODIFY: execute the game and log data.
         next_obs, rewards, terminations, truncations, infos = envs.step(actions)
 
-        try:
-            writer.add_scalar("stats/step_reward", infos["step"]["reward"], global_step)
-            #
-            writer.add_scalar(
-                "stats/episodic_return", infos["episode"]["r"], global_step
-            )
-            writer.add_scalar(
-                "stats/episodic_length", infos["episode"]["l"], global_step
-            )
-            #
+        if terminations[0]:
             num_ep = infos["stats_ep"]["episode"]
+            ret = infos["stats_ep"]["return"]
+            cause = infos["stats_ep"]["termination"]
             stats = infos["stats_ep"]["stats"]
             success_rate = infos["stats_ep"]["success_rate"]
             collision_rate = infos["stats_ep"]["collision_rate"]
 
             #
-            logger.info(f"episode-{num_ep}: {infos["stats_ep"]["mean_reward"]}")
+            logger.info(f'episode-{num_ep}: {ret}-{cause}')
+            #
+            writer.add_scalar(
+                "stats/episodic_return", infos["episode"]["r"], num_ep 
+            )
+            writer.add_scalar(
+                "stats/episodic_length", infos["episode"]["l"], num_ep 
+            )
+            #
 
             writer.add_scalar(
                 "stats/mean_reward",
                 infos["stats_ep"]["mean_reward"],
                 num_ep,
             )
-
             writer.add_scalar("stats/collision_rate", collision_rate, num_ep)
             writer.add_scalar("stats/success_rate", success_rate, num_ep)
-        except Exception as e:
-            pass
+
+            if num_ep % 1000  == 0:
+                eval_reward = eval_dqn_model(args, num_ep, q_network, run_name, writer)
+                logger.info(f'eval-episode-{num_ep}: {eval_reward}')
+
 
         # TRY NOT TO MODIFY: save data to reply buffer; handle `final_observation`
         real_next_obs = next_obs.copy()
         for idx, trunc in enumerate(truncations):
             if trunc:
                 real_next_obs[idx] = infos["final_observation"][idx]
-        rb.add(obs, real_next_obs, poses, actions, rewards, terminations, infos)
+        rb.add(obs, real_next_obs, actions, rewards, terminations, infos)
+        #rb.add(obs, real_next_obs, poses, actions, rewards, terminations, infos)
 
         # TRY NOT TO MODIFY: CRUCIAL step easy to overlook
         obs = next_obs
@@ -121,14 +125,16 @@ if __name__ == "__main__":
             if global_step % args.train_frequency == 0:
                 data = rb.sample(args.batch_size)
                 with torch.no_grad():
-                    target_max, _ = target_network(
-                        data.next_observations, data.poses
-                    ).max(dim=1)
+                    target_max, _ = target_network(data.next_observations).max(dim=1)
+                    #target_max, _ = target_network(
+#                        data.next_observations, data.poses
+#                    ).max(dim=1)
                     td_target = data.rewards.flatten() + args.gamma * target_max * (
                         1 - data.dones.flatten()
                     )
                 old_val = (
-                    q_network(data.observations, data.poses)
+                    #q_network(data.observations, data.poses)
+                    q_network(data.observations)
                     .gather(1, data.actions)
                     .squeeze()
                 )
@@ -168,8 +174,7 @@ if __name__ == "__main__":
                         print(f"model saved to {model_path}")
                         max_return = rewards[0]
 
-            # if global_step % args.eval_frequency == 0:
-            #    eval_reward = eval_dqn_model(args, q_network, run_name, writer)
+
 
     envs.close()
     writer.close()

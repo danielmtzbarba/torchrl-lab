@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class ArgsCarlaBEVTest:
-    exp_name: str = "carlabev-mpdqn-run1"
+    exp_name: str = "carlabev-dqn-curve-run2"
     """the name of this experiment"""
     seed: int = 1
     """seed of the experiment"""
@@ -31,7 +31,7 @@ class ArgsCarlaBEVTest:
     # Algorithm specific arguments
     env_id: str = "CarlaBEV-v0"
     """the id of the environment"""
-    total_timesteps: int = 4000000
+    total_timesteps: int = 20000000
     """total timesteps of the experiments"""
     learning_rate: float = 2.5e-4
     """the learning rate of the optimizer"""

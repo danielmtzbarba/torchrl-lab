@@ -9,7 +9,7 @@ from agents.dqn import QNetwork
 from envs import make_carlabev_env
 
 
-def eval_dqn_model(args, q_network, run_name, writer):
+def eval_dqn_model(args, num_episode, q_network, run_name, writer):
     model_path = f"runs/{run_name}/{args.exp_name}.cleanrl_model"
     from evals.dqn_eval import evaluate
 
@@ -18,11 +18,13 @@ def eval_dqn_model(args, q_network, run_name, writer):
         model_path,
         make_carlabev_env,
         args.env_id,
+        num_episode=num_episode,
         eval_episodes=10,
         run_name=f"{run_name}-eval",
         Model=QNetwork,
         device="cuda:0",
         epsilon=0.05,
+        writer=writer,
     )
 
     for idx, episodic_return in enumerate(episodic_returns):
@@ -48,12 +50,14 @@ def evaluate(
     model_path: str,
     make_env: Callable,
     env_id: str,
+    num_episode: int,
     eval_episodes: int,
     run_name: str,
     Model: torch.nn.Module,
     device: torch.device = torch.device("cpu"),
     epsilon: float = 0.05,
     capture_video: bool = True,
+    writer: object = None 
 ):
     envs = gym.vector.SyncVectorEnv(
         [make_env(env_id, 0, 0, capture_video, run_name, size=args.size)]
@@ -72,15 +76,22 @@ def evaluate(
         else:
             q_values = model(torch.Tensor(obs).to(device))
             actions = torch.argmax(q_values, dim=1).cpu().numpy()
-        next_obs, _, _, _, infos = envs.step(actions)
-        if "final_info" in infos:
-            for info in infos["final_info"]:
-                if "episode" not in info:
-                    continue
-                print(
-                    f"eval_episode={len(episodic_returns)}, episodic_return={info['episode']['r']}"
-                )
-                episodic_returns += [info["episode"]["r"]]
+        next_obs, _, terminations, _, infos = envs.step(actions)
+
+        if terminations[0]:
+            num_ep = infos["stats_ep"]["episode"]
+            ret = infos["stats_ep"]["return"]
+            cause = infos["stats_ep"]["termination"]
+            stats = infos["stats_ep"]["stats"]
+            success_rate = infos["stats_ep"]["success_rate"]
+            collision_rate = infos["stats_ep"]["collision_rate"]
+
+            #
+            writer.add_scalar(
+                f"eval/{num_episode[0]}/episodic_return", ret, num_ep 
+            )
+
+            episodic_returns += [ret]
         obs = next_obs
 
     return episodic_returns
