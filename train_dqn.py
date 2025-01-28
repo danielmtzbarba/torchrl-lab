@@ -43,8 +43,10 @@ if __name__ == "__main__":
     max_return = 0
 
     envs = make_env(args, run_name)
+    print("Building environment...")
 
     q_network, optimizer, target_network, rb = build_agent(args, envs, device)
+    print("go")
 
     # save blank model
     model_path = f"runs/{run_name}/{args.exp_name}.cleanrl_model"

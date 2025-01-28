@@ -5,7 +5,7 @@ from envs.carlabev import make_carlabev_env
 from agents import QNetwork
 
 device = "cuda:0"
-size = 128
+size = 512
 model_path = "runs/dqn-gridworld-seed_1-bs_20000/dqn-gridworld.cleanrl_model"
 LOAD_MODEL = False
 
@@ -41,7 +41,7 @@ model.eval()
 # Reset the environment to generate the first observation
 observation, info = env.reset(seed=42)
 total_reward = 0
-for _ in range(1000):
+for _ in range(3000):
     # this is where you would insert your policy
     action = env.action_space.sample()
 
