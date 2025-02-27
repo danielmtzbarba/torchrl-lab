@@ -6,7 +6,7 @@ from envs.carlabev import make_carlabev_env
 from agents import QNetwork
 
 device = "cuda:0"
-size = 512
+size = 128
 model_path = "runs/dqn-gridworld-seed_1-bs_20000/dqn-gridworld.cleanrl_model"
 LOAD_MODEL = False
 

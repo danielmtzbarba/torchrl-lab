@@ -3,11 +3,11 @@ from dataclasses import dataclass
 
 @dataclass
 class ArgsCarlaBEVDemo:
-    exp_name: str = "dqn-carlabev-demo-run2"
+    exp_name: str = "dqn-carlabev-demo"
     """the name of this experiment"""
     seed: int = 1
     """seed of the experiment"""
-    size: int = 512 
+    size: int = 128
     """size of rendered image"""
     torch_deterministic: bool = True
     """if toggled, `torch.backends.cudnn.deterministic=False`"""
@@ -31,7 +31,7 @@ class ArgsCarlaBEVDemo:
     # Algorithm specific arguments
     env_id: str = "CarlaBEV-v0"
     """the id of the environment"""
-    total_timesteps: int = 10000000
+    total_timesteps: int = 1000000
     """total timesteps of the experiments"""
     learning_rate: float = 2.5e-4
     """the learning rate of the optimizer"""
